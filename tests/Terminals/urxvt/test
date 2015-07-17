@@ -1,0 +1,66 @@
+! .Xresources 2.11.2
+! Time-stamp: <2015-02-19 14:13:07 PST xoddf2>
+
+Xft.dpi: 96
+
+! rxvt-unicode -----------------------------------------------------------------
+URxvt.termName: rxvt-unicode-256color
+
+URxvt.urgentOnBell: true
+
+URxvt.scrollBar: false
+URxvt.pointerBlank: true
+
+URxvt.background: rgba:0000/0000/0000/D8D8
+URxvt.foreground: white
+
+URxvt.color0: #000000
+URxvt.color1: #CD0000
+URxvt.color2: #00CD00
+URxvt.color3: #CDCD00
+URxvt.color4: #0000EE
+URxvt.color5: #CD00CD
+URxvt.color6: #00CDCD
+URxvt.color7: #E5E5E5
+URxvt.color8: #7F7F7F
+URxvt.color9: #FF0000
+URxvt.color10: #00FF00
+URxvt.color11: #FFFF00
+URxvt.color12: #5C5CFF
+URxvt.color13: #FF00FF
+URxvt.color14: #00FFFF
+URxvt.color15: #FFFFFF
+
+URxvt.depth: 32
+
+URxvt.font: -xos4-terminus-medium-r-*-*-14-*-*-*-*-*-*-*
+
+URxvt.perl-ext-common: keyboard-select
+URxvt.keysym.M-Escape: perl:keyboard-select:activate
+
+URxvt.geometry: 80x50
+
+! Emacs ------------------------------------------------------------------------
+Emacs.geometry: 80x50
+Emacs.menuBar: off
+Emacs.toolBar: off
+Emacs.verticalScrollBars: off
+Emacs.internalBorder: 2
+Emacs.background: black
+Emacs.foreground: white
+Emacs.font: -xos4-terminus-medium-r-*-*-14-*-*-*-*-*-*-*
+
+! xclock -----------------------------------------------------------------------
+XClock.Clock.background: black
+XClock.Clock.foreground: green
+XClock.Clock.analog: false
+XClock.Clock.update: 1
+XClock.Clock.face: Fixed-12:foundry=misc:weight=normal:slant=roman
+XClock.Clock.padding: 7
+XClock.Clock.render: true
+XClock.Clock.strftime: %a %b %d %H:%M:%S %Z %Y
+
+! xload ------------------------------------------------------------------------
+XLoad*background: black
+XLoad*foreground: white
+XLoad*highlight: red

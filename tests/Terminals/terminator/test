@@ -1,0 +1,14 @@
+[global_config]
+[keybindings]
+[profiles]
+  [[default]]
+    palette = "#000000:#e93f3f:#9e6ebd:#590016:#a7fdff:#3b003b:#985659:#aaaaaa:#555555:#763f3f:#ff00fa:#ffff00:#000000:#690069:#55ffff:#ffffff"
+[layouts]
+  [[default]]
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+    [[[window0]]]
+      type = Window
+      parent = ""
+[plugins]
