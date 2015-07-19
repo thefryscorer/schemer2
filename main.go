@@ -81,12 +81,12 @@ func main() {
 	}
 	if *format_string == "" {
 		fmt.Println("Input and output format must be specified using '-format' flag.")
-		usage()
+		flags_usage()
 		os.Exit(2)
 	}
 	if *infile == "" {
 		fmt.Println("Input file must be provided using '-in' flag.")
-		usage()
+		flags_usage()
 		os.Exit(2)
 	}
 	if *minBrightness > 255 || *maxBrightness > 255 {
@@ -106,7 +106,7 @@ func main() {
 	// And get colors from file using specified format
 	if len(strings.SplitN(*format_string, format_separator, 2)) < 2 {
 		fmt.Println("Invalid format string. Separate input and output formats with: '" + format_separator + "'")
-		usage()
+		flags_usage()
 		os.Exit(2)
 	}
 	input_format := strings.SplitN(*format_string, format_separator, 2)[0]

@@ -1,18 +1,14 @@
 # To Do
 
-- Redesign command line interface to accomodate new features
-> Possible Idea:
-> schemer2 -format=xfce->img -in=terminalrc -out=image.png
-
+- Add advanced options for advanced manipulation of image generation
 
 - Support for following terminal inputs
-  + Xterm
-  + Urxvt
+  + Xterm (Partially done, needs more testing)
+  + Urxvt (See: xterm)
   + Mac Terminal
   + iTerm2
   + RoxTerm
   + Konsole
   + Plain text
-- Expose more advanced options for image generation
-- Write more tests
 
+- Write more tests and find existing configurations for terminals to test against
