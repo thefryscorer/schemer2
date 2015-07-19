@@ -6,6 +6,6 @@ then
 else
   for i in `seq 1 10`;
   do
-    schemer2 -minBright=0 -format img:img -in testinput.png -out testout$i.png -w=$1 -h=$2
+    schemer2 -minBright=0 -format img:img -in testinput.png -out testout$i.png -width=$1 -height=$2
   done
 fi
