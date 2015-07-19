@@ -70,7 +70,7 @@ And it will be built in your GOPATH directory, in a subdirectory named 'bin'. To
 ## Supported output formats
 
 - Images (png)
-- Colours in just plain text (default)
+- Colors in plain text
 - Konsole
 - xterm/rxvt/aterm
 - urxvt
