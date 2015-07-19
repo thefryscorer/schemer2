@@ -10,29 +10,41 @@ import (
 	"strings"
 )
 
+const (
+	format_separator = "::"
+)
+
 var (
 	threshold     *int
-	output        *string
-	input         *string
+	outfile       *string
+	infile        *string
+	format_string *string
 	minBrightness *int
 	maxBrightness *int
-	imageout      *string
 	imageWidth    *int
 	imageHeight   *int
+
+	write_to_file bool
 )
 
 func usage() {
-	fmt.Println("Usage: schemer2 [FLAGS] -in=[FORMAT]:[FILENAME] (-out=[FORMAT] | -outputImage=[FILENAME])")
+	fmt.Println("Usage: schemer2 [FLAGS] -format [INPUTFORMAT]" + format_separator + "[OUTPUTFORMAT] -in [INPUTFILE] -out [OUTPUTFILE]")
+}
+
+func flags_usage() {
+	usage()
 	flag.PrintDefaults()
 	os.Exit(2)
 }
 
 func main() {
-	inSupport := "Format and filename of input file (eg \"xfce:~/.config/xfce4/terminal/terminalrc\"). Currently supported: \n"
-	outSupport := "Format to output colors as. Currently supported: \n"
+	inSupport := "Input formats:\n"
+	outSupport := "Output formats:\n"
 	for _, f := range formats {
 		if f.output != nil {
 			outSupport += strings.Join([]string{"    ", f.friendlyName, ":", f.flagName, "\n"}, " ")
+			// Special case for img output
+			outSupport += "    Image output : img\n"
 		}
 
 		if f.input != nil {
@@ -41,19 +53,28 @@ func main() {
 	}
 
 	threshold = flag.Int("t", 50, "Threshold for minimum color difference (image input only)")
-	output = flag.String("out", "", outSupport)
-	input = flag.String("in", "", inSupport)
+	infile = flag.String("in", "", "Input file")
+	outfile = flag.String("out", "", "File to write output to.")
+	format_string = flag.String("format", "", "Format of input and output. Eg. 'image"+format_separator+"xterm'")
 	minBrightness = flag.Int("minBright", 0, "Minimum brightness for colors (image input only)")
 	maxBrightness = flag.Int("maxBright", 200, "Maximum brightness for colors (image input only)")
-	imageout = flag.String("outputImage", "", "Create image from colors, and save to this file")
 	imageHeight = flag.Int("h", 1080, "Height of output image")
 	imageWidth = flag.Int("w", 1920, "Width of output image")
 
-	flag.Usage = usage
+	flag.Usage = flags_usage
 	flag.Parse()
-	if *input == "" {
+	if *format_string == "" {
+		fmt.Println("Input and output format must be specified using '-format' flag.")
 		usage()
 		os.Exit(2)
+	}
+	if *infile == "" {
+		fmt.Println("Input file must be provided using '-in' flag.")
+		usage()
+		os.Exit(2)
+	}
+	if *outfile != "" {
+		write_to_file = true
 	}
 	if *minBrightness > 255 || *maxBrightness > 255 {
 		fmt.Print("Minimum and maximum brightness must be an integer between 0 and 255.\n")
@@ -68,21 +89,26 @@ func main() {
 		log.Fatal("Minimum resolution of image output is 100x100")
 	}
 
-	// Determine format and filename
+	// Determine format and filenames
 	// And get colors from file using specified format
-	format := strings.SplitN(*input, ":", 2)[0]
-	filename := strings.SplitN(*input, ":", 2)[1]
+	if len(strings.SplitN(*format_string, format_separator, 2)) < 2 {
+		fmt.Println("Invalid format string. Separate input and output formats with: '" + format_separator + "'")
+		usage()
+		os.Exit(2)
+	}
+	input_format := strings.SplitN(*format_string, format_separator, 2)[0]
+	output_format := strings.SplitN(*format_string, format_separator, 2)[1]
 
 	formatInMatch := false
 	var colors []color.Color
 	var err error
 	for _, f := range formats {
-		if format == f.flagName {
+		if input_format == f.flagName {
 			if f.input == nil {
-				fmt.Printf("Unrecognised input format: %v \n", format)
+				fmt.Printf("Unrecognised input format: %v \n", input_format)
 				return
 			}
-			colors, err = f.input(filename)
+			colors, err = f.input(*infile)
 			if err != nil {
 				fmt.Print(err, "\n")
 				return
@@ -92,7 +118,7 @@ func main() {
 		}
 	}
 	if !formatInMatch {
-		fmt.Printf("Did not recognise format %v. \n", *input)
+		fmt.Printf("Did not recognise format %v. \n", input_format)
 		return
 	}
 
@@ -104,27 +130,54 @@ func main() {
 		log.Fatal("Less than 16 colors. Aborting.")
 	}
 
-	// Output the configuration specified
-	if !(*output == "") {
+	// Output the configuration for terminal, or image
+	if output_format != "img" {
 		formatOutMatch := false
 		for _, f := range formats {
-			if *output == f.flagName {
+			if output_format == f.flagName {
 				if f.output == nil {
-					fmt.Printf("Unrecognised output format: %v \n", format)
+					fmt.Printf("Unrecognised output format: %v \n", output_format)
 					return
 				}
-				fmt.Print(f.output(colors))
+				result := f.output(colors)
+				// If outfile is specified, write output to file
+				// Otherwise, write to stdout.
+				// TODO: Make it abundantly clear that the output is *only* the colors
+				// and attempting to write directly to a config file will overwrite all other
+				// data in the config file.
+				if *outfile != "" {
+					file, err := os.OpenFile(*outfile, os.O_CREATE|os.O_WRONLY, 0666)
+					if err != nil {
+						fmt.Println(err)
+						os.Exit(1)
+					}
+					defer file.Close()
+					err = file.Truncate(0)
+					if err != nil {
+						fmt.Println(err)
+						os.Exit(1)
+					}
+					fmt.Fprint(file, result)
+				} else {
+					fmt.Printf(result)
+				}
 				formatOutMatch = true
 				break
 			}
 		}
 		if !formatOutMatch {
-			fmt.Printf("Did not recognise format %v. \n", *output)
+			fmt.Printf("Did not recognise format %v. \n", output_format)
 		}
-	}
-
-	if *imageout != "" {
-		file, err := os.OpenFile(*imageout, os.O_CREATE|os.O_WRONLY, 0666)
+	} else {
+		var file *os.File
+		var err error
+		if *outfile == "" {
+			fmt.Println("Warning: Image output requested, yet no output file provided.")
+			fmt.Println("Writing image data to /tmp/schemer_out.png")
+			file, err = os.OpenFile("/tmp/schemer_out.png", os.O_CREATE|os.O_WRONLY, 0666)
+		} else {
+			file, err = os.OpenFile(*outfile, os.O_CREATE|os.O_WRONLY, 0666)
+		}
 		if err != nil {
 			log.Fatal(err)
 		}

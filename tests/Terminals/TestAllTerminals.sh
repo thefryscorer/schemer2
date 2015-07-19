@@ -9,5 +9,5 @@ formats=$(
 
 for f in $formats;
 do
-  schemer2 -in=$f:./$f/test -outputImage=test$f.png
+  schemer2 -format $f:img -in=./$f/test -out=test$f.png
 done
