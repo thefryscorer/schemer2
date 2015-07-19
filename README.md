@@ -40,16 +40,16 @@ And it will be built in your GOPATH directory, in a subdirectory named 'bin'. To
 ## Usage 
 
 #### Reading from terminal config and outputting to image
-> schemer2 -in=xterm:$HOME/.Xresources -outputImage=out.png
+> schemer2 -format xterm::img -in .Xresources -out image.png
 
 #### Reading from that image and outputting terminal config (lilyterm)
-> schemer2 -in=img:out.png -out=lilyterm
+> schemer2 -format img::lilyterm -in image.png
 
 #### Reading from Xresources and outputting in termite format
-> schemer2 -in=xterm:$HOME/.Xresources -out=termite
+> schemer2 -format xterm::termite -in .Xresources
 
 #### Getting colors from image, and outputting a new image
-> schemer2 -in=img:old.png -outputImage=new.png
+> schemer2 -format img::img -in image.png -out new.png
 
 
 ## Features 
@@ -69,6 +69,7 @@ And it will be built in your GOPATH directory, in a subdirectory named 'bin'. To
 
 ## Supported output formats
 
+- Images (png)
 - Colours in just plain text (default)
 - Konsole
 - xterm/rxvt/aterm

@@ -33,33 +33,37 @@ func usage() {
 
 func flags_usage() {
 	usage()
+	inputs_outputs()
 	flag.PrintDefaults()
 	os.Exit(2)
 }
 
-func main() {
+func inputs_outputs() {
 	inSupport := "Input formats:\n"
 	outSupport := "Output formats:\n"
 	for _, f := range formats {
 		if f.output != nil {
 			outSupport += strings.Join([]string{"    ", f.friendlyName, ":", f.flagName, "\n"}, " ")
-			// Special case for img output
-			outSupport += "    Image output : img\n"
 		}
+		// Special case for img output
+		outSupport += "    Image output : img\n"
 
 		if f.input != nil {
 			inSupport += strings.Join([]string{"    ", f.friendlyName, ":", f.flagName, "\n"}, " ")
 		}
 	}
+	fmt.Print(inSupport, outSupport)
+}
 
-	threshold = flag.Int("t", 50, "Threshold for minimum color difference (image input only)")
+func main() {
+	threshold = flag.Int("threshold", 50, "Threshold for minimum color difference (image input only)")
 	infile = flag.String("in", "", "Input file")
 	outfile = flag.String("out", "", "File to write output to.")
 	format_string = flag.String("format", "", "Format of input and output. Eg. 'image"+format_separator+"xterm'")
 	minBrightness = flag.Int("minBright", 0, "Minimum brightness for colors (image input only)")
 	maxBrightness = flag.Int("maxBright", 200, "Maximum brightness for colors (image input only)")
-	imageHeight = flag.Int("h", 1080, "Height of output image")
-	imageWidth = flag.Int("w", 1920, "Width of output image")
+	imageHeight = flag.Int("height", 1080, "Height of output image")
+	imageWidth = flag.Int("width", 1920, "Width of output image")
 
 	flag.Usage = flags_usage
 	flag.Parse()
