@@ -24,7 +24,7 @@ var (
 	imageWidth    *int
 	imageHeight   *int
 
-	write_to_file bool
+	advancedoptions *bool
 )
 
 func usage() {
@@ -33,9 +33,15 @@ func usage() {
 
 func flags_usage() {
 	usage()
+	fmt.Printf("\n\n") // Spacing
 	inputs_outputs()
-	flag.PrintDefaults()
-	os.Exit(2)
+	fmt.Printf("\n\n") // Spacing
+
+	if !*advancedoptions {
+		fmt.Println("Run with -help-advanced flag to show advanced options")
+	} else {
+		flag.PrintDefaults()
+	}
 }
 
 func inputs_outputs() {
@@ -51,9 +57,9 @@ func inputs_outputs() {
 		}
 	}
 	// Special case for img output
-	outSupport += "    Image output : img\n"
+	outSupport += "     Image output : img\n"
 
-	fmt.Print(inSupport, outSupport)
+	fmt.Print(inSupport, "\n", outSupport)
 }
 
 func main() {
@@ -65,9 +71,14 @@ func main() {
 	maxBrightness = flag.Int("maxBright", 200, "Maximum brightness for colors (image input only)")
 	imageHeight = flag.Int("height", 1080, "Height of output image")
 	imageWidth = flag.Int("width", 1920, "Width of output image")
+	advancedoptions = flag.Bool("help-advanced", false, "Show advanced command line options")
 
 	flag.Usage = flags_usage
 	flag.Parse()
+	if *advancedoptions {
+		flags_usage()
+		os.Exit(1)
+	}
 	if *format_string == "" {
 		fmt.Println("Input and output format must be specified using '-format' flag.")
 		usage()
@@ -77,9 +88,6 @@ func main() {
 		fmt.Println("Input file must be provided using '-in' flag.")
 		usage()
 		os.Exit(2)
-	}
-	if *outfile != "" {
-		write_to_file = true
 	}
 	if *minBrightness > 255 || *maxBrightness > 255 {
 		fmt.Print("Minimum and maximum brightness must be an integer between 0 and 255.\n")
