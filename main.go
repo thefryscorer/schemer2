@@ -45,13 +45,14 @@ func inputs_outputs() {
 		if f.output != nil {
 			outSupport += strings.Join([]string{"    ", f.friendlyName, ":", f.flagName, "\n"}, " ")
 		}
-		// Special case for img output
-		outSupport += "    Image output : img\n"
 
 		if f.input != nil {
 			inSupport += strings.Join([]string{"    ", f.friendlyName, ":", f.flagName, "\n"}, " ")
 		}
 	}
+	// Special case for img output
+	outSupport += "    Image output : img\n"
+
 	fmt.Print(inSupport, outSupport)
 }
 
