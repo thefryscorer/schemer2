@@ -9,7 +9,18 @@ Schemer2
 
 ### Short version
 
+If you already have Go installed and configured:
+
 > go get github.com/thefryscorer/schemer2
+
+### Less Short Version
+
+This method doesn't require a GOPATH, but it is recommended that you configure one.
+
+- Install Go
+- Clone this repository
+- Run 'go build' inside directory with main.go file to build binary
+- Run newly created binary from the command line
 
 ### Long Version
 
