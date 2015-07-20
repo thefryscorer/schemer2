@@ -12,3 +12,4 @@
   + Plain text
 
 - Write more tests and find existing configurations for terminals to test against
+- Stop background colored objects from being drawn on image output
