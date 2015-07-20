@@ -157,7 +157,7 @@ func Circles(colors []color.Color, w int, h int, size int, sizevar int, overlap 
 	bg := colors[0]
 
 	if large2small {
-		sort.Sort(circleBySize(circles))
+		sort.Sort(sort.Reverse(circleBySize(circles)))
 	}
 
 	for x := 0; x < w; x++ {
@@ -201,7 +201,7 @@ func Rays(colors []color.Color, w int, h int, size int, sizevar int, evendist bo
 
 	rays := make([]Ray, 0)
 
-	spacing := 180 / len(colors)
+	spacing := 360 / len(colors)
 	current_angle := 0
 
 	xpos := w / 2
@@ -214,7 +214,7 @@ func Rays(colors []color.Color, w int, h int, size int, sizevar int, evendist bo
 			ypos = rand.Intn(h)
 		}
 		if !evendist {
-			current_angle = rand.Intn(180)
+			current_angle = rand.Intn(360)
 		}
 		ray = Ray{c, xpos, ypos, current_angle, randMinMax(size-sizevar, size+sizevar)}
 
@@ -222,6 +222,10 @@ func Rays(colors []color.Color, w int, h int, size int, sizevar int, evendist bo
 			current_angle += spacing + ray.size
 		}
 		rays = append(rays, ray)
+	}
+
+	if large2small {
+		sort.Sort(sort.Reverse(rayBySize(rays)))
 	}
 
 	bg := colors[0]
@@ -233,6 +237,9 @@ func Rays(colors []color.Color, w int, h int, size int, sizevar int, evendist bo
 				deltaX := float64(x - r.x)
 				deltaY := float64(y - r.y)
 				angle := math.Atan(deltaY/deltaX) * 180 / math.Pi
+				if angle < 0 {
+					angle += 360
+				}
 				if int(math.Abs(float64(int(angle)-r.angle))) < r.size {
 					img.Set(x, y, r.col)
 				}
