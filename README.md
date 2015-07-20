@@ -1,8 +1,4 @@
-# UNDER CONSTRUCTION
-
-Various aspects of this program are still being developed. Command line usage is quite probably going to change somewhat from as it is now. 
-
-Terminal Colorscheme Generator
+Schemer2 -- Terminal Colorscheme Generator
 ==============================
 
 ## Screenshot 
@@ -54,7 +50,9 @@ And it will be built in your GOPATH directory, in a subdirectory named 'bin'. To
 
 ## Features 
 
+- Reads configuration for several different terminals
 - Outputs configuration in several different formats for different terminals.
+- Can output colors as a generated image/wallpaper either random or customized
 - Configurable color difference threshold
 - Configurable minimum and maximum brightness value
 
