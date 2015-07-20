@@ -16,7 +16,7 @@
 
 - Vim colorscheme input/output
 
-# "Maybe"
+# Maybe
 
 - Include pre-compiled binaries for Linux, Mac and Windows 
 - Separate install instructions into INSTALL.md
