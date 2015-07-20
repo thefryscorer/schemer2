@@ -1,5 +1,5 @@
-Schemer2 -- Terminal Colorscheme Generator
-==============================
+Schemer2 
+=========
 
 ## Screenshot 
 ![Screenshot](http://i.imgur.com/63R70Iz.png)
