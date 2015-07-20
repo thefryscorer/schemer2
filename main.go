@@ -30,12 +30,12 @@ var (
 	imageOutType *string // Eg, "random", "circles", "stripes", etc...
 
 	// Circles image output options
-	circleSize                  *int
-	circleSizeVariance          *int
-	circleOverlap               *bool
-	circleDrawLargestToSmallest *bool
-	circleFilled                *bool
-	circleBorderSize            *int
+	circlesSize                  *int
+	circlesSizeVariance          *int
+	circlesOverlap               *bool
+	circlesDrawLargestToSmallest *bool
+	circlesFilled                *bool
+	circlesBorderSize            *int
 
 	// Ray image output options
 	raysSize                  *int
@@ -112,12 +112,12 @@ func main() {
 	imageOutType = flag.String("imageOutType", "random", imageOutTypeDesc)
 
 	// Circles image output options
-	circleSize = flag.Int("circleSize", 100, "Size of circles in output image")
-	circleSizeVariance = flag.Int("circleSizeVariance", 50, "Maximum variance in circle size")
-	circleOverlap = flag.Bool("circleOverlap", true, "Allow circles to overlap !!! Unimplemented !!!")
-	circleDrawLargestToSmallest = flag.Bool("circleLargeToSmall", true, "Order circles z-index by size (smaller circles are drawn in front of larger circles)")
-	circleFilled = flag.Bool("circleFilled", false, "Fill circles")
-	circleBorderSize = flag.Int("circleBorderSize", 10, "Border of circles when unfilled")
+	circlesSize = flag.Int("circlesSize", 100, "Size of circles in output image")
+	circlesSizeVariance = flag.Int("circlesSizeVariance", 50, "Maximum variance in circle size")
+	circlesOverlap = flag.Bool("circlesOverlap", true, "Allow circles to overlap !!! Unimplemented !!!")
+	circlesDrawLargestToSmallest = flag.Bool("circlesLargeToSmall", true, "Order circles z-index by size (smaller circles are drawn in front of larger circles)")
+	circlesFilled = flag.Bool("circlesFilled", false, "Fill circles")
+	circlesBorderSize = flag.Int("circlesBorderSize", 10, "Border of circles when unfilled")
 
 	// Ray image output options
 	raysSize = flag.Int("raysSize", 16, "Size of rays in output image")

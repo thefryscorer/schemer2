@@ -121,7 +121,7 @@ func imageFromColors(colors []color.Color, w int, h int) (image.Image, error) {
 	case "random":
 		return randomImage(colors, w, h), nil
 	case "circles":
-		return Circles(colors, w, h, *circleSize, *circleSizeVariance, *circleOverlap, *circleDrawLargestToSmallest, *circleFilled, *circleBorderSize), nil
+		return Circles(colors, w, h, *circlesSize, *circlesSizeVariance, *circlesOverlap, *circlesDrawLargestToSmallest, *circlesFilled, *circlesBorderSize), nil
 	case "rays":
 		return Rays(colors, w, h, *raysSize, *raysSizeVariance, *raysDistributeEvenly, *raysCentered, *raysDrawLargestToSmallest), nil
 	case "stripes":
@@ -148,13 +148,16 @@ func Circles(colors []color.Color, w int, h int, size int, sizevar int, overlap 
 	img := image.NewNRGBA(image.Rect(0, 0, w, h))
 
 	circles := make([]Circle, 0)
+	bg := colors[0]
 
 	for _, c := range colors {
+		// Do not create circle with background color
+		if c == bg {
+			continue
+		}
 		circle := Circle{c, rand.Intn(w), rand.Intn(h), randMinMax(size-sizevar, size+sizevar)}
 		circles = append(circles, circle)
 	}
-
-	bg := colors[0]
 
 	if large2small {
 		sort.Sort(sort.Reverse(circleBySize(circles)))
@@ -207,7 +210,13 @@ func Rays(colors []color.Color, w int, h int, size int, sizevar int, evendist bo
 	xpos := w / 2
 	ypos := h / 2
 
+	bg := colors[0]
+
 	for _, c := range colors {
+		// Do not create ray with background color
+		if c == bg {
+			continue
+		}
 		var ray Ray
 		if !centered {
 			xpos = rand.Intn(w)
@@ -227,8 +236,6 @@ func Rays(colors []color.Color, w int, h int, size int, sizevar int, evendist bo
 	if large2small {
 		sort.Sort(sort.Reverse(rayBySize(rays)))
 	}
-
-	bg := colors[0]
 
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
@@ -268,8 +275,13 @@ func Lines(colors []color.Color, w int, h int, size int, sizevar int, horizontal
 	spacing := spacingsize
 
 	lines := make([]Line, 0)
+	bg := colors[0]
 
 	for _, c := range colors {
+		// Do not create line with background color
+		if c == bg {
+			continue
+		}
 		line := Line{c, currentposition, randMinMax(size-sizevar, size+sizevar)}
 		lines = append(lines, line)
 		if !equalspacing {
@@ -277,8 +289,6 @@ func Lines(colors []color.Color, w int, h int, size int, sizevar int, horizontal
 		}
 		currentposition += line.size + spacing
 	}
-
-	bg := colors[0]
 
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
