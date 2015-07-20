@@ -15,15 +15,45 @@ const (
 )
 
 var (
-	threshold     *int
 	outfile       *string
 	infile        *string
 	format_string *string
+
+	// Image input options
+	threshold     *int
 	minBrightness *int
 	maxBrightness *int
-	imageWidth    *int
-	imageHeight   *int
 
+	// Generic image output options
+	imageWidth   *int
+	imageHeight  *int
+	imageOutType *string // Eg, "random", "circles", "stripes", etc...
+
+	// Circles image output options
+	circleSize                  *int
+	circleSizeVariance          *int
+	circleOverlap               *bool
+	circleDrawLargestToSmallest *bool
+	circleFilled                *bool
+	circleBorderSize            *int
+
+	// Ray image output options
+	raysSize                  *int
+	raysSizeVariance          *int
+	raysDistributeEvenly      *bool
+	raysCentered              *bool
+	raysDrawLargestToSmallest *bool
+
+	// Stripes image output options
+	stripesSize         *int
+	stripesSizeVariance *int
+	stripesHorizontal   *bool
+	stripesEqualSize    *bool
+	stripesEvenSpacing  *bool
+	stripesSpacing      *int
+	stripesOffset       *int
+
+	// Show advanced help
 	advancedoptions *bool
 )
 
@@ -63,14 +93,47 @@ func inputs_outputs() {
 }
 
 func main() {
-	threshold = flag.Int("threshold", 50, "Threshold for minimum color difference (image input only)")
 	infile = flag.String("in", "", "Input file")
 	outfile = flag.String("out", "", "File to write output to.")
 	format_string = flag.String("format", "", "Format of input and output. Eg. 'image"+format_separator+"xterm'")
+
+	threshold = flag.Int("threshold", 50, "Threshold for minimum color difference (image input only)")
 	minBrightness = flag.Int("minBright", 0, "Minimum brightness for colors (image input only)")
 	maxBrightness = flag.Int("maxBright", 200, "Maximum brightness for colors (image input only)")
+
 	imageHeight = flag.Int("height", 1080, "Height of output image")
 	imageWidth = flag.Int("width", 1920, "Width of output image")
+	imageOutTypeDesc := "Type of image to generate. Available options: \n"
+	for _, t := range imageOutTypes {
+		imageOutTypeDesc += "    "
+		imageOutTypeDesc += t
+		imageOutTypeDesc += "\n"
+	}
+	imageOutType = flag.String("imageOutType", "random", imageOutTypeDesc)
+
+	// Circles image output options
+	circleSize = flag.Int("circleSize", 100, "Size of circles in output image")
+	circleSizeVariance = flag.Int("circleSizeVariance", 50, "Maximum variance in circle size")
+	circleOverlap = flag.Bool("circleOverlap", true, "Allow circles to overlap !!! Unimplemented !!!")
+	circleDrawLargestToSmallest = flag.Bool("circleLargeToSmall", true, "Order circles z-index by size (smaller circles are drawn in front of larger circles)")
+	circleFilled = flag.Bool("circleFilled", false, "Fill circles")
+	circleBorderSize = flag.Int("circleBorderSize", 10, "Border of circles when unfilled")
+
+	// Ray image output options
+	raysSize = flag.Int("raysSize", 16, "Size of rays in output image")
+	raysSizeVariance = flag.Int("raysSizeVariance", 8, "Maximum variance in rays size")
+	raysDistributeEvenly = flag.Bool("raysDistributeEvenly", false, "Distribute rays evenly")
+	raysCentered = flag.Bool("raysCentered", true, "Center rays in middle")
+	raysDrawLargestToSmallest = flag.Bool("raysLargeToSmall", false, "Order rays z-index by size (smaller rays are drawn on top of larger rays)")
+
+	// Stripes image output options
+	stripesSize = flag.Int("stripesSize", 6, "Size of stripes in output image")
+	stripesSizeVariance = flag.Int("stripesSizeVariance", 3, "Maximum variance in stripes size")
+	stripesHorizontal = flag.Bool("stripesHorizontal", false, "Draw stripes horizontally instead of vertically")
+	stripesEvenSpacing = flag.Bool("stripesEvenSpacing", true, "Space all stripes evenly")
+	stripesSpacing = flag.Int("stripesSpacing", 0, "Space stripes by this amount when spacing evenly")
+	stripesOffset = flag.Int("stripesOffset", 0, "Offset stripes by this amount")
+
 	advancedoptions = flag.Bool("help-advanced", false, "Show advanced command line options")
 
 	flag.Usage = flags_usage
@@ -196,7 +259,11 @@ func main() {
 		}
 		defer file.Close()
 
-		img := imageFromColors(colors, *imageWidth, *imageHeight) // TODO
+		img, err := imageFromColors(colors, *imageWidth, *imageHeight) // TODO
+		if err != nil {
+			fmt.Printf(err.Error())
+			os.Exit(1)
+		}
 
 		png.Encode(file, img)
 	}

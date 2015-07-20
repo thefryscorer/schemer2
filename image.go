@@ -10,8 +10,11 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"sort"
 	"time"
 )
+
+var imageOutTypes = [...]string{"random", "circles", "rays", "stripes"}
 
 func loadImage(filepath string) image.Image {
 	infile, err := os.Open(filepath)
@@ -32,6 +35,17 @@ func abs(n int) int {
 		return n
 	}
 	return -n
+}
+
+func randMinMax(min int, max int) int {
+	if min == max {
+		return min
+	}
+	return rand.Intn(max-min) + min
+}
+
+func randBool() bool {
+	return rand.Intn(2) == 0
 }
 
 func colorDifference(col1 color.Color, col2 color.Color, threshold int) bool {
@@ -101,47 +115,20 @@ func colorsFromImage(filename string) ([]color.Color, error) {
 	return distinctColors, nil
 }
 
-func imageFromColors(colors []color.Color, w int, h int) image.Image {
+func imageFromColors(colors []color.Color, w int, h int) (image.Image, error) {
 	rand.Seed(time.Now().UnixNano())
-	switch rand.Intn(4) {
-	case 0:
-		// Circles
-		switch rand.Intn(2) {
-		case 0:
-			return Circles(colors, w, h, false)
-		case 1:
-			return Circles(colors, w, h, true)
-		}
-	case 1:
-		// Rays
-		switch rand.Intn(2) {
-		case 0:
-			return Rays(colors, w, h, true, rand.Intn(w/24))
-		case 1:
-			return Rays(colors, w, h, false, rand.Intn(w/24))
-		}
-	case 2:
-		// Horizontal Lines
-		switch rand.Intn(2) {
-		case 0:
-			return HorizontalLines(colors, w, h, false)
-		case 1:
-			return HorizontalLines(colors, w, h, true)
-		}
-	case 3:
-		// Vertical Lines
-		switch rand.Intn(4) {
-		case 0:
-			return VerticalLines(colors, w, h, false, false)
-		case 1:
-			return VerticalLines(colors, w, h, true, false)
-		case 2:
-			return VerticalLines(colors, w, h, false, true)
-		case 3:
-			return VerticalLines(colors, w, h, true, true)
-		}
+	switch *imageOutType {
+	case "random":
+		return randomImage(colors, w, h), nil
+	case "circles":
+		return Circles(colors, w, h, *circleSize, *circleSizeVariance, *circleOverlap, *circleDrawLargestToSmallest, *circleFilled, *circleBorderSize), nil
+	case "rays":
+		return Rays(colors, w, h, *raysSize, *raysSizeVariance, *raysDistributeEvenly, *raysCentered, *raysDrawLargestToSmallest), nil
+	case "stripes":
+		return Lines(colors, w, h, *stripesSize, *stripesSizeVariance, *stripesHorizontal, *stripesEvenSpacing, *stripesSpacing, *stripesOffset), nil
+
 	}
-	return nil
+	return nil, errors.New("Unrecognised ouput image type: " + *imageOutType + "\n")
 }
 
 type Circle struct {
@@ -150,18 +137,28 @@ type Circle struct {
 	size int
 }
 
-func Circles(colors []color.Color, w int, h int, filled bool) image.Image {
+// For sorting circles by size
+type circleBySize []Circle
+
+func (a circleBySize) Len() int           { return len(a) }
+func (a circleBySize) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a circleBySize) Less(i, j int) bool { return a[i].size < a[j].size }
+
+func Circles(colors []color.Color, w int, h int, size int, sizevar int, overlap bool, large2small bool, filled bool, bordersize int) image.Image {
 	img := image.NewNRGBA(image.Rect(0, 0, w, h))
 
 	circles := make([]Circle, 0)
 
 	for _, c := range colors {
-		circle := Circle{c, rand.Intn(w), rand.Intn(h), rand.Intn(w / 2)}
+		circle := Circle{c, rand.Intn(w), rand.Intn(h), randMinMax(size-sizevar, size+sizevar)}
 		circles = append(circles, circle)
 	}
 
 	bg := colors[0]
-	border := rand.Intn(w / 24)
+
+	if large2small {
+		sort.Sort(circleBySize(circles))
+	}
 
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
@@ -175,7 +172,7 @@ func Circles(colors []color.Color, w int, h int, filled bool) image.Image {
 						img.Set(x, y, c.col)
 					}
 				} else {
-					if int(math.Sqrt(a+b)) < c.size && int(math.Sqrt(a+b)) > (c.size-border) {
+					if int(math.Sqrt(a+b)) < c.size && int(math.Sqrt(a+b)) > (c.size-bordersize) {
 						img.Set(x, y, c.col)
 					}
 				}
@@ -185,25 +182,46 @@ func Circles(colors []color.Color, w int, h int, filled bool) image.Image {
 	return img
 }
 
-type Stripe struct {
+type Ray struct {
 	col   color.Color
 	x, y  int // Middle point
 	angle int // 0-180
+	size  int
 }
 
-func Rays(colors []color.Color, w int, h int, centered bool, margin int) image.Image {
+// For sorting rays by size
+type rayBySize []Ray
+
+func (a rayBySize) Len() int           { return len(a) }
+func (a rayBySize) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a rayBySize) Less(i, j int) bool { return a[i].size < a[j].size }
+
+func Rays(colors []color.Color, w int, h int, size int, sizevar int, evendist bool, centered bool, large2small bool) image.Image {
 	img := image.NewNRGBA(image.Rect(0, 0, w, h))
 
-	stripes := make([]Stripe, 0)
+	rays := make([]Ray, 0)
+
+	spacing := 180 / len(colors)
+	current_angle := 0
+
+	xpos := w / 2
+	ypos := h / 2
 
 	for _, c := range colors {
-		var stripe Stripe
-		if centered {
-			stripe = Stripe{c, w / 2, h / 2, rand.Intn(180)}
-		} else {
-			stripe = Stripe{c, rand.Intn(w), rand.Intn(h), rand.Intn(180)}
+		var ray Ray
+		if !centered {
+			xpos = rand.Intn(w)
+			ypos = rand.Intn(h)
 		}
-		stripes = append(stripes, stripe)
+		if !evendist {
+			current_angle = rand.Intn(180)
+		}
+		ray = Ray{c, xpos, ypos, current_angle, randMinMax(size-sizevar, size+sizevar)}
+
+		if evendist {
+			current_angle += spacing + ray.size
+		}
+		rays = append(rays, ray)
 	}
 
 	bg := colors[0]
@@ -211,12 +229,12 @@ func Rays(colors []color.Color, w int, h int, centered bool, margin int) image.I
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
 			img.Set(x, y, bg)
-			for _, s := range stripes {
-				deltaX := float64(x - s.x)
-				deltaY := float64(y - s.y)
+			for _, r := range rays {
+				deltaX := float64(x - r.x)
+				deltaY := float64(y - r.y)
 				angle := math.Atan(deltaY/deltaX) * 180 / math.Pi
-				if int(math.Abs(float64(int(angle)-s.angle))) < margin {
-					img.Set(x, y, s.col)
+				if int(math.Abs(float64(int(angle)-r.angle))) < r.size {
+					img.Set(x, y, r.col)
 				}
 			}
 		}
@@ -224,41 +242,33 @@ func Rays(colors []color.Color, w int, h int, centered bool, margin int) image.I
 	return img
 }
 
-type VerticalLine struct {
-	col color.Color
-	x   int
-	w   int
+type Line struct {
+	col      color.Color
+	position int
+	size     int
 }
 
-type HorizontalLine struct {
-	col color.Color
-	y   int
-	h   int
-}
-
-func VerticalLines(colors []color.Color, w int, h int, evenlySpaced bool, evenWidth bool) image.Image {
+func Lines(colors []color.Color, w int, h int, size int, sizevar int, horizontal bool, equalspacing bool, spacingsize int, offset int) image.Image {
 	img := image.NewNRGBA(image.Rect(0, 0, w, h))
+	var maxsize int
+	if horizontal {
+		maxsize = h
+	} else {
+		maxsize = w
+	}
 
-	lines := make([]VerticalLine, 0)
+	currentposition := offset
+	spacing := spacingsize
 
-	var width int
-	width = rand.Intn(w / 16)
-
-	x_index := rand.Intn(w / 2)
-
-	var spacing int
-	spacing = rand.Intn(w / 32)
+	lines := make([]Line, 0)
 
 	for _, c := range colors {
-		if !evenWidth {
-			width = rand.Intn(w / 16)
+		line := Line{c, currentposition, randMinMax(size-sizevar, size+sizevar)}
+		lines = append(lines, line)
+		if !equalspacing {
+			spacing = rand.Intn(maxsize / 16)
 		}
-		if !evenlySpaced {
-			spacing = rand.Intn(w / 32)
-		}
-		x_index += spacing
-		lines = append(lines, VerticalLine{c, x_index, width})
-		x_index += width
+		currentposition += line.size + spacing
 	}
 
 	bg := colors[0]
@@ -267,7 +277,14 @@ func VerticalLines(colors []color.Color, w int, h int, evenlySpaced bool, evenWi
 		for y := 0; y < h; y++ {
 			img.Set(x, y, bg)
 			for _, l := range lines {
-				if x >= l.x && x < l.x+l.w {
+				var pixelpos int
+				if horizontal {
+					pixelpos = y
+				} else {
+					pixelpos = x
+				}
+
+				if pixelpos > l.position && pixelpos < l.position+l.size {
 					img.Set(x, y, l.col)
 				}
 			}
@@ -275,39 +292,16 @@ func VerticalLines(colors []color.Color, w int, h int, evenlySpaced bool, evenWi
 	}
 
 	return img
-
 }
 
-func HorizontalLines(colors []color.Color, w int, h int, evenHeight bool) image.Image {
-	img := image.NewNRGBA(image.Rect(0, 0, w, h))
-
-	lines := make([]HorizontalLine, 0)
-
-	var height int
-	if evenHeight {
-		height = rand.Intn(h / 16)
+func randomImage(colors []color.Color, w int, h int) image.Image {
+	switch rand.Intn(3) {
+	case 0:
+		return Circles(colors, w, h, rand.Intn(w/2), rand.Intn(w/2), randBool(), randBool(), randBool(), rand.Intn(w/16))
+	case 1:
+		return Rays(colors, w, h, rand.Intn(h/32), rand.Intn(h/32), randBool(), true, randBool())
+	case 2:
+		return Lines(colors, w, h, rand.Intn(h/32), rand.Intn(h/32), randBool(), randBool(), rand.Intn(h/32), rand.Intn(h/2))
 	}
-
-	for _, c := range colors {
-		if !evenHeight {
-			height = rand.Intn(h / 16)
-		}
-		lines = append(lines, HorizontalLine{c, rand.Intn(h), height})
-	}
-
-	bg := colors[0]
-
-	for x := 0; x < w; x++ {
-		for y := 0; y < h; y++ {
-			img.Set(x, y, bg)
-			for _, l := range lines {
-				if y >= l.y && y < l.y+l.h {
-					img.Set(x, y, l.col)
-				}
-			}
-		}
-	}
-
-	return img
-
+	return nil
 }
