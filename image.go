@@ -318,7 +318,7 @@ func randomImage(colors []color.Color, w int, h int) image.Image {
 	case 1:
 		return Rays(colors, w, h, rand.Intn(h/32)+1, rand.Intn(h/32), randBool(), true, randBool())
 	case 2:
-		return Lines(colors, w, h, rand.Intn(h/32), rand.Intn(h/32), randBool(), randBool(), rand.Intn(h/32), rand.Intn(h/2)+1)
+		return Lines(colors, w, h, rand.Intn(h/32)+1, rand.Intn(h/32), randBool(), randBool(), rand.Intn(h/32), rand.Intn(h/2)+1)
 	}
 	return nil
 }
