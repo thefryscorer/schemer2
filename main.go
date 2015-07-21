@@ -36,6 +36,8 @@ var (
 	circlesDrawLargestToSmallest *bool
 	circlesFilled                *bool
 	circlesBorderSize            *int
+	circlesBlur                  *bool
+	circlesOpacity               *int
 
 	// Ray image output options
 	raysSize                  *int
@@ -117,6 +119,8 @@ func main() {
 	circlesOverlap = flag.Bool("circlesOverlap", true, "Allow circles to overlap !!! Unimplemented !!!")
 	circlesDrawLargestToSmallest = flag.Bool("circlesLargeToSmall", true, "Order circles z-index by size (smaller circles are drawn in front of larger circles)")
 	circlesFilled = flag.Bool("circlesFilled", false, "Fill circles")
+	circlesBlur = flag.Bool("circlesBlurred", false, "Blur circles")
+	circlesOpacity = flag.Int("circlesOpacity", 100, "Opacity of circles")
 	circlesBorderSize = flag.Int("circlesBorderSize", 10, "Border of circles when unfilled")
 
 	// Ray image output options

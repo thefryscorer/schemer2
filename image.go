@@ -4,6 +4,7 @@ import (
 	"errors"
 	"image"
 	"image/color"
+	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
@@ -15,6 +16,8 @@ import (
 )
 
 var imageOutTypes = [...]string{"random", "circles", "rays", "stripes"}
+
+const m = 1<<16 - 1
 
 func loadImage(filepath string) image.Image {
 	infile, err := os.Open(filepath)
@@ -44,8 +47,34 @@ func randMinMax(min int, max int) int {
 	return rand.Intn(max-min) + min
 }
 
+func multiplyAlpha(c1 color.Color, c2 color.Color) color.Color {
+	r1, g1, b1, a1 := color.RGBAModel.Convert(c1).RGBA()
+	r2, g2, b2, a2 := color.RGBAModel.Convert(c2).RGBA()
+
+	red1, green1, blue1, alpha1 := float64(r1), float64(g1), float64(b1), float64(a1)
+	red2, green2, blue2, _ := float64(r2), float64(g2), float64(b2), float64(a2)
+
+	if alpha1 == 255 {
+		return c1
+	}
+
+	r := (red1 * alpha1 / 255) + red2*(1-alpha1/255)
+	g := (green1 * alpha1 / 255) + green2*(1-alpha1/255)
+	b := (blue1 * alpha1 / 255) + blue2*(1-alpha1/255)
+
+	result := color.NRGBA{uint8(r), uint8(g), uint8(b), 255}
+	return result
+}
+
 func randBool() bool {
 	return rand.Intn(2) == 0
+}
+
+func capToMax(n, max int) int {
+	if n > max {
+		return max
+	}
+	return n
 }
 
 func colorDifference(col1 color.Color, col2 color.Color, threshold int) bool {
@@ -121,7 +150,7 @@ func imageFromColors(colors []color.Color, w int, h int) (image.Image, error) {
 	case "random":
 		return randomImage(colors, w, h), nil
 	case "circles":
-		return Circles(colors, w, h, *circlesSize, *circlesSizeVariance, *circlesOverlap, *circlesDrawLargestToSmallest, *circlesFilled, *circlesBorderSize), nil
+		return Circles(colors, w, h, *circlesSize, *circlesSizeVariance, *circlesOverlap, *circlesDrawLargestToSmallest, *circlesFilled, *circlesBorderSize, *circlesBlur, *circlesOpacity), nil
 	case "rays":
 		return Rays(colors, w, h, *raysSize, *raysSizeVariance, *raysDistributeEvenly, *raysCentered, *raysDrawLargestToSmallest), nil
 	case "stripes":
@@ -144,7 +173,7 @@ func (a circleBySize) Len() int           { return len(a) }
 func (a circleBySize) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a circleBySize) Less(i, j int) bool { return a[i].size < a[j].size }
 
-func Circles(colors []color.Color, w int, h int, size int, sizevar int, overlap bool, large2small bool, filled bool, bordersize int) image.Image {
+func Circles(colors []color.Color, w int, h int, size int, sizevar int, overlap bool, large2small bool, filled bool, bordersize int, blur bool, opacity int) image.Image {
 	img := image.NewNRGBA(image.Rect(0, 0, w, h))
 
 	circles := make([]Circle, 0)
@@ -166,22 +195,47 @@ func Circles(colors []color.Color, w int, h int, size int, sizevar int, overlap 
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
 			img.Set(x, y, bg)
-			for _, c := range circles {
-				a := float64((x - c.x) * (x - c.x))
-				b := float64((y - c.y) * (y - c.y))
+		}
+	}
+	for _, c := range circles {
+		circleimg := image.NewNRGBA(image.Rect(0, 0, c.size*2, c.size*2))
+		for x := 0; x < c.size*2; x++ {
+			for y := 0; y < c.size*2; y++ {
+
+				a := float64((x - c.size) * (x - c.size))
+				b := float64((y - c.size) * (y - c.size))
+
+				dist := int(math.Sqrt(a + b))
+
+				var col color.Color
+				if blur {
+					alph := 255 - (float64(dist) / (float64(c.size) / 255))
+					r, g, b, _ := c.col.RGBA()
+					col = color.NRGBA{uint8(r), uint8(g), uint8(b), uint8(alph)}
+				} else if opacity != 100 {
+					alph := opacity * 255 / 100
+					r, g, b, _ := c.col.RGBA()
+					col = color.NRGBA{uint8(r), uint8(g), uint8(b), uint8(alph)}
+				} else {
+					col = c.col
+				}
 
 				if filled {
-					if int(math.Sqrt(a+b)) < c.size {
-						img.Set(x, y, c.col)
+					if dist < c.size {
+						circleimg.Set(x, y, col)
 					}
 				} else {
-					if int(math.Sqrt(a+b)) < c.size && int(math.Sqrt(a+b)) > (c.size-bordersize) {
-						img.Set(x, y, c.col)
+					if dist < c.size && dist > (c.size-bordersize) {
+						circleimg.Set(x, y, col)
 					}
 				}
 			}
 		}
+
+		dst := image.Rect(c.x-c.size, c.y-c.size, c.x+c.size, c.y+c.size)
+		draw.Draw(img, dst, circleimg, image.Point{0, 0}, draw.Over)
 	}
+
 	return img
 }
 
@@ -314,7 +368,7 @@ func Lines(colors []color.Color, w int, h int, size int, sizevar int, horizontal
 func randomImage(colors []color.Color, w int, h int) image.Image {
 	switch rand.Intn(3) {
 	case 0:
-		return Circles(colors, w, h, rand.Intn(w/2), rand.Intn(w/2), randBool(), randBool(), randBool(), rand.Intn(20))
+		return Circles(colors, w, h, rand.Intn(w/2), rand.Intn(w/2), randBool(), randBool(), randBool(), rand.Intn(20), randBool(), 100)
 	case 1:
 		return Rays(colors, w, h, rand.Intn(h/32)+1, rand.Intn(h/32), randBool(), true, randBool())
 	case 2:
