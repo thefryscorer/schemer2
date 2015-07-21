@@ -4,7 +4,7 @@ Schemer2
 ## Screenshots
 ![Ray](http://i.imgur.com/63R70Iz.png)
 
-![Blur](http://imgur.com/cF9mHMD)
+![Blur](http://i.imgur.com/cF9mHMD.png)
 
 [More Screenshots](http://imgur.com/a/Kz9Av)
 
