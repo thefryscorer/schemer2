@@ -28,6 +28,7 @@ var (
 	imageWidth   *int
 	imageHeight  *int
 	imageOutType *string // Eg, "random", "circles", "stripes", etc...
+	imageOverlay *string
 
 	// Circles image output options
 	circlesSize                  *int
@@ -112,6 +113,7 @@ func main() {
 		imageOutTypeDesc += "\n"
 	}
 	imageOutType = flag.String("imageOutType", "random", imageOutTypeDesc)
+	imageOverlay = flag.String("imageOverlay", "", "Filename of image to draw on top of generated image (OS/Distro logo, etc...)")
 
 	// Circles image output options
 	circlesSize = flag.Int("circlesSize", 100, "Size of circles in output image")

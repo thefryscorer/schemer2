@@ -146,18 +146,26 @@ func colorsFromImage(filename string) ([]color.Color, error) {
 
 func imageFromColors(colors []color.Color, w int, h int) (image.Image, error) {
 	rand.Seed(time.Now().UnixNano())
+	var img image.Image
 	switch *imageOutType {
 	case "random":
-		return randomImage(colors, w, h), nil
+		img = randomImage(colors, w, h)
 	case "circles":
-		return Circles(colors, w, h, *circlesSize, *circlesSizeVariance, *circlesOverlap, *circlesDrawLargestToSmallest, *circlesFilled, *circlesBorderSize, *circlesBlur, *circlesOpacity), nil
+		img = Circles(colors, w, h, *circlesSize, *circlesSizeVariance, *circlesOverlap, *circlesDrawLargestToSmallest, *circlesFilled, *circlesBorderSize, *circlesBlur, *circlesOpacity)
 	case "rays":
-		return Rays(colors, w, h, *raysSize, *raysSizeVariance, *raysDistributeEvenly, *raysCentered, *raysDrawLargestToSmallest), nil
+		img = Rays(colors, w, h, *raysSize, *raysSizeVariance, *raysDistributeEvenly, *raysCentered, *raysDrawLargestToSmallest)
 	case "stripes":
-		return Lines(colors, w, h, *stripesSize, *stripesSizeVariance, *stripesHorizontal, *stripesEvenSpacing, *stripesSpacing, *stripesOffset), nil
-
+		img = Lines(colors, w, h, *stripesSize, *stripesSizeVariance, *stripesHorizontal, *stripesEvenSpacing, *stripesSpacing, *stripesOffset)
+	default:
+		return nil, errors.New("Unrecognised ouput image type: " + *imageOutType + "\n")
 	}
-	return nil, errors.New("Unrecognised ouput image type: " + *imageOutType + "\n")
+
+	if *imageOverlay != "" {
+		overlay := loadImage(*imageOverlay)
+		img = overlayImage(img, overlay, img.Bounds().Max.X/2, img.Bounds().Max.Y/2)
+	}
+
+	return img, nil
 }
 
 type Circle struct {
@@ -375,4 +383,14 @@ func randomImage(colors []color.Color, w int, h int) image.Image {
 		return Lines(colors, w, h, rand.Intn(h/32)+1, rand.Intn(h/32), randBool(), randBool(), rand.Intn(h/32), rand.Intn(h/2)+1)
 	}
 	return nil
+}
+
+func overlayImage(back image.Image, front image.Image, x int, y int) image.Image {
+	img := image.NewNRGBA(back.Bounds())
+	draw.Draw(img, img.Bounds(), back, image.Point{0, 0}, draw.Over)
+	frontWidth := front.Bounds().Max.X
+	frontHeight := front.Bounds().Max.Y
+	dst := image.Rect(x-frontWidth/2, y-frontHeight/2, x+frontWidth/2, x+frontHeight/2)
+	draw.Draw(img, dst, front, image.Point{0, 0}, draw.Over)
+	return img
 }
