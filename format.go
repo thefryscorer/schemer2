@@ -86,4 +86,9 @@ var formats = []Format{
 		flagName:     "osxterminal",
 		output:       printOSXTerminal,
 	},
+	{
+		friendlyName: "Gnome Terminal (dconf)",
+		flagName:     "gnome-terminal",
+		output:       printGnomeDConf,
+	},
 }

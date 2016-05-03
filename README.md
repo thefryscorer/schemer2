@@ -93,3 +93,4 @@ And it will be built in your GOPATH directory, in a subdirectory named 'bin'. To
 - Terminator
 - Chrome Shell
 - OS X Terminal
+- Gnome Terminal (dconf only for now)
