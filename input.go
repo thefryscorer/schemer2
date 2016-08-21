@@ -252,6 +252,9 @@ func inputXterm(filename string) ([]color.Color, error) {
 			return nil, err
 		}
 		colors = append(colors, col)
+		if len(colorlines) < 16 && i < 16 - len(colorlines) {
+			colors = append(colors, col)
+		}
 	}
 
 	return colors, nil
