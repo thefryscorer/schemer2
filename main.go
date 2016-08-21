@@ -204,12 +204,17 @@ func main() {
 		return
 	}
 
-	// Ensure there are 16 colors
-	if len(colors) > 16 {
+	// Keep track of the original number of colors
+	// In case we need to add more to meet 16
+	num_colors := len(colors)
+	if num_colors > 16 {
+		// Truncate the list down to 16
 		colors = colors[:16]
-	} else if len(colors) < 16 {
-		// TODO: Should this just be a warning (for cases where only 8 colors are defined?)
-		log.Fatal("Less than 16 colors. Aborting.")
+	} else if num_colors < 16 {
+		// In the case that less than 16 colors are generated, repeat the sequence.
+		for i := 0; i < 16-num_colors; i++ {
+			colors = append(colors, colors[i%num_colors])
+		}
 	}
 
 	// Output the configuration for terminal, or image
