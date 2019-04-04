@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sort"
 )
 
 func readFile(filename string) (string, error) {
@@ -277,12 +278,17 @@ func inputKittyTerm(filename string) ([]color.Color, error) {
 	re := regexp.MustCompile("^color[0-9]*")
 	for _, l := range lines {
 		if len(re.FindAllString(l, 1)) != 0 {
-			colorlines = append(colorlines, l)
+			colorlines = append(colorlines, strings.Replace(l, "color", "", 1))
 		}
 	}
 
+	sort.Slice(colorlines, func(i, j int) bool {
+		numA, _ := strconv.Atoi(strings.TrimSpace(colorlines[i][:2]))
+		numB, _ := strconv.Atoi(strings.TrimSpace(colorlines[j][:2]))
+		return numA < numB
+	})
+
 	// Extract and parse colors
-	// TODO: Sort by number first?
 	colors := make([]color.Color, 0)
 	for _, l := range colorlines {
 		// Assuming the color to be the rightmost half of the last instance of space/tab
