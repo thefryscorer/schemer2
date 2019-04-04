@@ -91,4 +91,10 @@ var formats = []Format{
 		flagName:     "gnome-terminal",
 		output:       printGnomeDConf,
 	},
+	{
+		friendlyName: "Kitty Terminal",
+		flagName:     "kitty",
+		output:       printKittyTerm,
+		input:        inputKittyTerm,
+	},
 }
