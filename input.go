@@ -292,7 +292,7 @@ func inputKittyTerm(filename string) ([]color.Color, error) {
 	colors := make([]color.Color, 0)
 	for _, l := range colorlines {
 		// Assuming the color to be the rightmost half of the last instance of space/tab
-		splits := strings.FieldsFunc(l, KittySplit)
+		splits := strings.Fields(l)
 		colorstring := splits[len(splits)-1]
 		col, err := parseColor(colorstring)
 		if err != nil {
@@ -302,8 +302,4 @@ func inputKittyTerm(filename string) ([]color.Color, error) {
 	}
 
 	return colors, nil
-}
-
-func KittySplit(r rune) bool {
-    return r == ' ' || r == '\t'
 }
