@@ -268,11 +268,6 @@ func inputKittyTerm(filename string) ([]color.Color, error) {
 	// Split into lines
 	lines := strings.Split(config, "\n")
 
-	// Remove all spaces
-	//for i, l := range lines {
-	//	lines[i] = strings.Replace(l, " ", "", -1)
-	//}
-
 	colorlines := make([]string, 0)
 	// Search for lines containing color information
 	re := regexp.MustCompile("^color[0-9]*")
