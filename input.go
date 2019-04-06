@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sort"
 )
 
 func readFile(filename string) (string, error) {
@@ -246,6 +247,52 @@ func inputXterm(filename string) ([]color.Color, error) {
 	for _, l := range colorlines {
 		// Assuming the color to be the rightmost half of the last colon
 		splits := strings.Split(l, ":")
+		colorstring := splits[len(splits)-1]
+		col, err := parseColor(colorstring)
+		if err != nil {
+			return nil, err
+		}
+		colors = append(colors, col)
+	}
+
+	return colors, nil
+}
+
+func inputKittyTerm(filename string) ([]color.Color, error) {
+	// Read in file
+	config, err := readFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// Split into lines
+	lines := strings.Split(config, "\n")
+
+	// Remove all spaces
+	//for i, l := range lines {
+	//	lines[i] = strings.Replace(l, " ", "", -1)
+	//}
+
+	colorlines := make([]string, 0)
+	// Search for lines containing color information
+	re := regexp.MustCompile("^color[0-9]*")
+	for _, l := range lines {
+		if len(re.FindAllString(l, 1)) != 0 {
+			colorlines = append(colorlines, strings.Replace(l, "color", "", 1))
+		}
+	}
+
+	sort.Slice(colorlines, func(i, j int) bool {
+		numA, _ := strconv.Atoi(strings.TrimSpace(colorlines[i][:2]))
+		numB, _ := strconv.Atoi(strings.TrimSpace(colorlines[j][:2]))
+		return numA < numB
+	})
+
+	// Extract and parse colors
+	colors := make([]color.Color, 0)
+	for _, l := range colorlines {
+		// Assuming the color to be the rightmost half of the last instance of space/tab
+		splits := strings.Fields(l)
 		colorstring := splits[len(splits)-1]
 		col, err := parseColor(colorstring)
 		if err != nil {
